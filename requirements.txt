@@ -6,7 +6,7 @@ tensorboard
 opencv-python
 etaprogress
 torchsummary
-ptflops
+ptflops==0.7.2.2
 matplotlib
 scikit-learn
 scikit-image

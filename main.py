@@ -12,46 +12,42 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         customPrint("Invalid option(s) selected! To get help, execute script with -h flag.")
         exit()
-    
+
     # Reading Model Configuration
     if options.conf:
         configCreator()
 
     # Loading Configuration
     config = configReader()
-  
+
     # Taking action as per received options
     if options.epoch:
-        config=updateConfig(entity='epoch', value=options.epoch)
+        config = updateConfig(entity='epoch', value=options.epoch)
     if options.batch:
-        config=updateConfig(entity='batchSize', value=options.batch)
+        config = updateConfig(entity='batchSize', value=options.batch)
     if options.manualUpdate:
-        config=manualUpdateEntity()
+        config = manualUpdateEntity()
     if options.modelSummary:
         DPE(config).modelSummary()
     if options.train:
         DPE(config).modelTraining(dataSamples=options.dataSamples)
     if options.retrain:
-        DPE(config).modelTraining(resumeTraning=True, dataSamples=options.dataSamples) 
+        DPE(config).modelTraining(resumeTraning=True, dataSamples=options.dataSamples)
     if options.inference:
         noiseSigmaSet = None
         if options.noiseSigma:
             noiseSigmaSet = options.noiseSigma.split(',')
             noiseSigmaSet = list(map(int, noiseSigmaSet))
-        DPE(config).modelInference(testImagesPath=options.sourceDir, outputDir=options.resultDir, noiseSet=noiseSigmaSet)
+        DPE(config).modelInference(testImagesPath=options.sourceDir, outputDir=options.resultDir,
+                                   noiseSet=noiseSigmaSet)
     if options.overFitTest:
         DPE(config).modelTraining(overFitTest=True)
     if options.dataSampling:
-        datasetSampler(config, options.sourceDir, options.resultDir, options.gridSize, options.dataSamples).samplingImages()
+        datasetSampler(config, options.sourceDir, options.resultDir, options.gridSize,
+                       options.dataSamples).samplingImages()
     if options.resumeDataSampling:
-        datasetSampler(config, options.sourceDir, options.resultDir, options.gridSize, options.dataSamples).resumeSampling()
+        datasetSampler(config, options.sourceDir, options.resultDir, options.gridSize,
+                       options.dataSamples).resumeSampling()
     if options.patch:
         patch = patchExtract(config, options.sourceDir, options.resultDir)
         patch()
-    
-        
-        
-        
-            
-
-
