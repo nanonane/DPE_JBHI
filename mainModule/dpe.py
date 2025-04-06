@@ -212,7 +212,7 @@ class DPE:
                 # Progress Bar
                 if (currentStep  + 1) % 10== 0:
                     bar.numerator = currentStep + 1
-                    print(Fore.YELLOW + "Steps |",bar,Fore.YELLOW + "| LossEG: {:.4f}, LossED: {:.4f}".format(lossEG, lossED),end='\r')
+                    print('\r' + Fore.YELLOW + "Steps |",bar,Fore.YELLOW + "| LossEG: {:.4f}, LossED: {:.4f}".format(lossEG, lossED), end='')
                     
                 
                 # Updating training log
@@ -272,18 +272,18 @@ class DPE:
                 #try:
                 for imgPath in testImageList:
                     #a = datetime.now()
-                    img = modelInference.inputForInference(imgPath, noiseLevel=noise).to(self.device)
+                    img = modelInference.inputForInference(imgPath, noiseLevel=noise).to(self.device)  # 这里noise疑似没用
                     #print(img.shape, imgPath)
                    
                     output = self.attentionNet(img)
                     #b = datetime.now()
                     #d = b - a
                     #print(img.shape, d)
-                    modelInference.saveModelOutput(output, imgPath, noise, steps)
+                    modelInference.saveModelOutput(output, imgPath, noise, steps, ext='.jpg')
                     imageCounter += 1
                     if imageCounter % 2 == 0:
                         barVal.numerator = imageCounter
-                        print(Fore.CYAN + "Image Processd |", barVal,Fore.CYAN, end='\r')
+                        print('\r' + Fore.CYAN + "Image Processd |", barVal,Fore.CYAN, end='')
                 #except:
                 #    os.remove(imgPath)
                 #    print ("File deleted:", imgPath, img.shape)

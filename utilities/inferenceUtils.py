@@ -15,6 +15,7 @@ from PIL import Image
 from dataTools.dataNormalization import *
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+from pathlib import Path
 
 class AddGaussianNoise(object):
     def __init__(self, noiseLevel):
@@ -68,8 +69,11 @@ class inference():
             imageSavingPath = self.outputRootDir + self.modelName  + "/"  + datasetName + "/" + extractFileName(inputImagePath, True)  + \
                             "_sigma_" + str(noiseLevel) + "_" + self.modelName + "_" + str(step) + ext
         else:
-            imageSavingPath = self.outputRootDir + self.modelName  + "/"  + datasetName + "/" + extractFileName(inputImagePath, True) + "_" +self.modelName + ext#\
+            # imageSavingPath = self.outputRootDir + self.modelName  + "/"  + datasetName + "/" + extractFileName(inputImagePath, True) + "_" +self.modelName + ext#\
                             #"_sigma_" + str(noiseLevel) + "_FT_" + self.modelName + ext
+            imgSavingDir = Path(self.outputRootDir)
+            imgName = Path(inputImagePath.split("/")[-1])
+            imageSavingPath = Path.joinpath(imgSavingDir, imgName)
         #print(imageSavingPath)
         save_image(self.unNormalize(modelOutput[0]), imageSavingPath)
 
@@ -91,5 +95,3 @@ class inference():
             imgInTargetDir = imageList(t, False)
             testImageList += imgInTargetDir
         return testImageList
-
-
