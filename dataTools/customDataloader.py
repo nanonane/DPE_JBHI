@@ -44,17 +44,25 @@ class customDatasetReader(Dataset):
         except:
             self.sampledImage = Image.open(self.image_list[i + 1])
             os.remove(i)
-            print ("File deleted:", i)
+            print("File deleted:", i)
             i += 1
+
+        # Convert sampledImage to RGB if it is grayscale
+        if self.sampledImage.mode != 'RGB':
+            self.sampledImage = self.sampledImage.convert('RGB')
 
         self.gtImageFileName = self.imagePathGT + extractFileName(self.image_list[i])
         self.gtImage = Image.open(self.gtImageFileName)
+
+        # Convert gtImage to RGB if it is grayscale
+        if self.gtImage.mode != 'RGB':
+            self.gtImage = self.gtImage.convert('RGB')
 
         # Transforms Images for training 
         self.inputImage = self.transformRI(self.sampledImage)
         self.gtImageHR = self.transformHRGT(self.gtImage)
 
         #print (self.gtImageHR.max(), self.gtImageHR.min(), self.inputImage.max(), self.inputImage.min())
-        
+
 
         return self.inputImage, self.gtImageHR
