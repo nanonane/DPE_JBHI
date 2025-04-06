@@ -115,11 +115,11 @@ def updateConfig(entity,value, path = 'mainModule/'):
         else:
             print ("The value of config entity {} is changing from {} to {}".format(entity, config[entity], value))
             config[entity] = value
-            userInput = input("Do you want to update config.json file? (default: N): ") or "N"
-            if userInput == "Y" or userInput == "y":
-                configWriter(config)
-            else:
-                print ("config.json file remainy unchanged!")
+            # userInput = input("Do you want to update config.json file? (default: N): ") or "N"
+            # if userInput == "Y" or userInput == "y":
+            configWriter(config)
+            # else:
+            #     print ("config.json file remainy unchanged!")
     
         return config
     except:
