@@ -28,6 +28,28 @@ class ResidualBlock(nn.Module):
     def forward(self, x):
         return x + self.conv_block(x)
 
+
+class ResNeXtBottleneck(nn.Module):
+    def __init__(self, in_channels, cardinality=32, bottleneck_width=4):
+        super().__init__()
+        D = cardinality * bottleneck_width
+        self.conv1 = nn.Conv2d(in_channels, D, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(D)
+        self.conv2 = nn.Conv2d(D, D, kernel_size=3, stride=1, padding=1, groups=cardinality, bias=False)
+        self.bn2 = nn.BatchNorm2d(D)
+        self.conv3 = nn.Conv2d(D, in_channels, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(in_channels)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        residual = x
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.relu(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
+        out += residual
+        return self.relu(out)
+
+
 class GatedConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride = 1, padding = 0, dilation = 1, pad_type = 'reflect', activation = 'lrelu', norm = 'none', sn = False):
         super(GatedConv2d, self).__init__()

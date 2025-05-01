@@ -10,24 +10,24 @@ class DPENet(nn.Module):
         self.inConv = nn.Conv2d(3,64, 3,1,1)
         self.FM0 = ResidualBlock(64)
 
-        self.FM1 = ResidualBlock(64)
+        self.FM1 = ResidualBlock(64)  # param: 64 x 64 x 3 x 3 x 2 = 73,728
         self.gate1 = GatedConv2d(64, 64, 3, padding=1)
         self.down1 = nn.Conv2d(64,96, kernel_size=3, stride=2, padding=1)
 
-        self.FM2 = ResidualBlock(96)
+        self.FM2 = ResidualBlock(96)  # param: 96 x 96 x 3 x 3 x 2 = 165,888
         self.gate2 = GatedConv2d(96, 96, 3, padding=1)
         self.down2 = nn.Conv2d(96,128, kernel_size=3, stride=2, padding=1)
         
-        self.FM3 = ResidualBlock(128)
+        self.FM3 = ResidualBlock(128)  # param: 128 x 128 x 3 x 3 x 2 = 294,912
         self.gate3 = GatedConv2d(128, 128, 3, padding=1)
         self.down3 = nn.Conv2d(128, 160, kernel_size=3, stride=2, padding=1)
 
-        self.FM4 = ResidualBlock(160)
+        self.FM4 = ResidualBlock(160)  # param: 160 x 160 x 3 x 3 x 2 = 460,800
         self.gate4 = GatedConv2d(160, 160, 3, padding=1)
         self.down4 = nn.Conv2d(160, 192, kernel_size=3, stride=2, padding=1)
 
 
-        self.FM5 = ResidualBlock(192)
+        self.FM5 = ResidualBlock(192)   # param: 192 x 192 x 3 x 3 x 2 = 663,552
         self.gate5 = GatedConv2d(192, 192, 3, padding=1)
         self.up1 = nn.ConvTranspose2d(192, 160, 2, 2)
 
@@ -83,5 +83,91 @@ class DPENet(nn.Module):
         return out#self.outc(x9_2) + x
 
 
-#net = Noise_DPN()
-#summary(net, input_size = (3, 256, 256))
+# net = Noise_DPN()
+# summary(net, input_size = (3, 256, 256))
+
+
+class DPENeXt(nn.Module):
+    def __init__(self):
+        super(DPENeXt, self).__init__()
+
+        self.inConv = nn.Conv2d(3, 64, 3, 1, 1)
+        self.FM0 = ResidualBlock(64)
+
+        # self.FM1 = ResidualBlock(64)  # param: 64 x 64 x 3 x 3 x 2 = 73,728
+        self.FM1 = ResNeXtBottleneck(64, bottleneck_width=12)  # param: 64 x 32 x 12 x 2 + 32 x 12 x 12 x 9 = 90,624
+        self.gate1 = GatedConv2d(64, 64, 3, padding=1)
+        self.down1 = nn.Conv2d(64, 96, kernel_size=3, stride=2, padding=1)
+
+        # self.FM2 = ResidualBlock(96)  # param: 96 x 96 x 3 x 3 x 2 = 165,888
+        self.FM2 = ResNeXtBottleneck(96, bottleneck_width=16)  # 96 x 512 x 2 + 32 x 16 x 16 x 9 = 172,032
+        self.gate2 = GatedConv2d(96, 96, 3, padding=1)
+        self.down2 = nn.Conv2d(96, 128, kernel_size=3, stride=2, padding=1)
+
+        # self.FM3 = ResidualBlock(128)  # param: 128 x 128 x 3 x 3 x 2 = 294,912
+        self.FM3 = ResNeXtBottleneck(128, bottleneck_width=20)  # 128 x 32 x 20 x 2 + 32 x 20 x 20 x 9 = 279,040
+        self.gate3 = GatedConv2d(128, 128, 3, padding=1)
+        self.down3 = nn.Conv2d(128, 160, kernel_size=3, stride=2, padding=1)
+
+        # self.FM4 = ResidualBlock(160)  # param: 160 x 160 x 3 x 3 x 2 = 460,800
+        self.FM4 = ResNeXtBottleneck(160, bottleneck_width=24)  # 160 x 32 x 24 x 2 + 32 x 24 x 24 x 9 = 411,648
+        self.gate4 = GatedConv2d(160, 160, 3, padding=1)
+        self.down4 = nn.Conv2d(160, 192, kernel_size=3, stride=2, padding=1)
+
+        # self.FM5 = ResidualBlock(192)   # param: 192 x 192 x 3 x 3 x 2 = 663,552
+        self.FM5 = ResNeXtBottleneck(192, bottleneck_width=32)  # 192 x 32 x 32 x 2 + 32 x 32 x 32 x 9 = 688,128
+        self.gate5 = GatedConv2d(192, 192, 3, padding=1)
+        self.up1 = nn.ConvTranspose2d(192, 160, 2, 2)
+
+        # self.FM6 = ResidualBlock(160)
+        self.FM6 = ResNeXtBottleneck(160, bottleneck_width=24)
+        self.up2 = nn.ConvTranspose2d(160, 128, 2, 2)
+
+        # self.FM7 = ResidualBlock(128)
+        self.FM7 = ResNeXtBottleneck(128, bottleneck_width=20)
+        self.up3 = nn.ConvTranspose2d(128, 96, 2, 2)
+
+        # self.FM8 = ResidualBlock(96)
+        self.FM8 = ResNeXtBottleneck(96, bottleneck_width=16)
+        self.up4 = nn.ConvTranspose2d(96, 64, 2, 2)
+
+        self.FM9 = ResidualBlock(64)
+
+        self.outc = nn.Conv2d(64, 3, 1, )
+
+    def forward(self, x):
+        x1_1 = self.inConv(x)
+        # x1_2 = self.FM0(x1_1)  #
+
+        x2_1 = self.FM1(x1_1)
+        g_2 = self.gate1(x2_1)
+        x2_2 = F.relu(self.down1(x2_1))
+
+        x3_1 = self.FM2(x2_2)
+        g_3 = self.gate2(x3_1)
+        x3_2 = F.relu(self.down2(x3_1))
+
+        x4_1 = self.FM3(x3_2)
+        g_4 = self.gate3(x4_1)
+        x4_2 = F.relu(self.down3(x4_1))
+
+        x5_1 = self.FM4(x4_2)
+        g_5 = self.gate4(x5_1)
+        x5_2 = F.relu(self.down4(x5_1))
+
+        x6_1 = self.FM5(x5_2)
+        x6_2 = F.relu(self.up1(x6_1)) + g_5
+
+        x7_1 = self.FM6(x6_2)
+        x7_2 = F.relu(self.up2(x7_1)) + g_4
+
+        x8_1 = self.FM7(x7_2)
+        x8_2 = F.relu(self.up3(x8_1)) + g_3
+
+        x9_1 = self.FM8(x8_2)
+        x9_2 = F.relu(self.up4(x9_1)) + g_2
+
+        # x10 = self.FM9(x9_2) #
+        out = torch.tanh(self.outc(x9_2) + x)
+
+        return out  # self.outc(x9_2) + x
