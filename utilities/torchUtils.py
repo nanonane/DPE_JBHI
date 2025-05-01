@@ -30,7 +30,7 @@ def findLastWeights(path, modelName = None, lastWeight = None ):
             weights.sort()
             lastWeight = path + "_checkpoint_{}.pth".format(weights[-1])
         except:
-            print("Multi format checkpoints have been found! However, the checkpoint without epoch flag has been selected arbitarily.")
+            print(f"\nMulti format checkpoints have been found! Using the checkpoint {lastWeight}.")
             lastWeight = path + "_checkpoint.pth"
     elif len(previousWeights) == 1:
         lastWeight = previousWeights[0]
@@ -60,19 +60,20 @@ def saveCheckpoint(modelStates, path, modelName = None, currentEpoch = None, bac
     
     if backup:
         # Taking backup of last weight
-        backupPath = path+ "/backup/"
+        backupPath = path + "backup/"
         createDir(backupPath)
         removeFiles(backupPath)
-        
-        if (len(glob.glob(path+"*.pth")) < 1):
+
+        curr_pth_list = glob.glob(path+"*.pth")
+        if len(curr_pth_list) < 1 or cpName not in curr_pth_list:
             pass
-        elif (len(glob.glob(path+"*.pth")) > 1):
+        elif len(curr_pth_list) > 1:
             lastWeight = findLastWeights(path, modelName)
             copyfile(lastWeight, backupPath+extractFileName(lastWeight))
         else:
             copyfile(cpName, backupPath+extractFileName(cpName))
 
-    torch.save(modelStates, cpName )
+    torch.save(modelStates, cpName)
 
 
 
