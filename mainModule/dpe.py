@@ -50,6 +50,7 @@ class DPE:
         self.adamBeta1 = float(config['adamBeta1'])
         self.adamBeta2 = float(config['adamBeta2'])
         self.barLen = int(config['barLen'])
+        self.hrImageSize = self.imageH if self.modelName == 'dpe' else self.imageH*2  # DPENeXt have an extra upsample layer
         
         # Initiating Training Parameters(for step)
         self.currentEpoch = 0
@@ -67,7 +68,13 @@ class DPE:
 
         # Preapring model(s) for GPU acceleration
         self.device =  torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        self.attentionNet = DPENet().to(self.device)
+        if self.modelName == 'dpe':
+            self.attentionNet = DPENet().to(self.device)
+        elif self.modelName == 'dpe-next':
+            self.attentionNet = DPENeXt().to(self.device)
+        else:
+            print("Unrecognized model name, using 'dpe' as default.")
+            self.attentionNet = DPENet().to(self.device)
         self.discriminator = attentiomDiscriminator().to(self.device)
 
         # Optimizers
@@ -90,8 +97,9 @@ class DPE:
         datasetReadder = customDatasetReader(   
                                                 image_list=targetImageList, 
                                                 imagePathGT=self.gtPath,
-                                                height = self.imageH,
-                                                width = self.imageW,
+                                                height=self.imageH,
+                                                width=self.imageW,
+                                                hrImageSize=self.hrImageSize,
                                             )
 
         self.trainLoader = torch.utils.data.DataLoader( dataset=datasetReadder,
@@ -238,11 +246,11 @@ class DPE:
                 
                 if (currentStep + 1) % 5000 == 0 : 
                     print("\n")
-                    self.savingWeights(currentStep + 1, True)
+                    self.savingWeights(currentStep + 1, True)  # save checkpoint weights to checkpoint/[step]/[modelName].pth
                     self.modelInference(validation=True, steps = currentStep + 1)
                     eHours, eMinutes, eSeconds = timer(iterTime, time.time())
-                    print (Fore.CYAN +'Steps [{}/{}] | Time elapsed [{:0>2}:{:0>2}:{:0>2}] | LossC: {:.2f}, LossP : {:.2f}, LossEG: {:.2f}, LossED: {:.2f}' 
-                            .format(currentStep + 1, self.totalSteps, eHours, eMinutes, eSeconds, colorLoss(highResFake, highResReal), featureLoss(highResFake, highResReal),lossEG, lossED))
+                    print (Fore.CYAN +'Steps [{}/{}] | Time elapsed [{:0>2}:{:0>2}:{:0>2}] | LossP : {:.2f}, LossEG: {:.2f}, LossED: {:.2f}'
+                            .format(currentStep + 1, self.totalSteps, eHours, eMinutes, eSeconds, featureLoss(highResFake, highResReal),lossEG, lossED))
                     
    
     def modelInference(self, testImagesPath = None, outputDir = None, resize = None, validation = None, noiseSet = None, steps = None):

@@ -92,7 +92,7 @@ class DPENeXt(nn.Module):
         super(DPENeXt, self).__init__()
 
         self.inConv = nn.Conv2d(3, 64, 3, 1, 1)
-        self.FM0 = ResidualBlock(64)
+        # self.FM0 = ResidualBlock(64)
 
         # self.FM1 = ResidualBlock(64)  # param: 64 x 64 x 3 x 3 x 2 = 73,728
         self.FM1 = ResNeXtBottleneck(64, bottleneck_width=12)  # param: 64 x 32 x 12 x 2 + 32 x 12 x 12 x 9 = 90,624
@@ -116,7 +116,7 @@ class DPENeXt(nn.Module):
 
         # self.FM5 = ResidualBlock(192)   # param: 192 x 192 x 3 x 3 x 2 = 663,552
         self.FM5 = ResNeXtBottleneck(192, bottleneck_width=32)  # 192 x 32 x 32 x 2 + 32 x 32 x 32 x 9 = 688,128
-        self.gate5 = GatedConv2d(192, 192, 3, padding=1)
+        # self.gate5 = GatedConv2d(192, 192, 3, padding=1)
         self.up1 = nn.ConvTranspose2d(192, 160, 2, 2)
 
         # self.FM6 = ResidualBlock(160)
@@ -131,7 +131,9 @@ class DPENeXt(nn.Module):
         self.FM8 = ResNeXtBottleneck(96, bottleneck_width=16)
         self.up4 = nn.ConvTranspose2d(96, 64, 2, 2)
 
-        self.FM9 = ResidualBlock(64)
+        # extra upsample
+        self.FM9 = ResidualBlock(64)  # param: 64 x 64 x 3 x 3 x 2 = 73,728
+        self.up5 = nn.ConvTranspose2d(64, 64, 2, 2)  # 64 x 64 x 2 x 2 = 16,384
 
         self.outc = nn.Conv2d(64, 3, 1, )
 
@@ -167,7 +169,11 @@ class DPENeXt(nn.Module):
         x9_1 = self.FM8(x8_2)
         x9_2 = F.relu(self.up4(x9_1)) + g_2
 
-        # x10 = self.FM9(x9_2) #
-        out = torch.tanh(self.outc(x9_2) + x)
+        x10 = self.FM9(x9_2)
+        x10_2 = F.relu(self.up5(x10))
 
-        return out  # self.outc(x9_2) + x
+        x_upsampled = F.interpolate(x, size=x10_2.size()[2:], mode='bilinear', align_corners=False)
+
+        out = torch.tanh(self.outc(x10_2) + x_upsampled)
+
+        return out

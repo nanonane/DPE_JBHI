@@ -10,16 +10,17 @@ from dataTools.dataNormalization import *
 from dataTools.customTransform import *
 import os
 class customDatasetReader(Dataset):
-    def __init__(self, image_list, imagePathGT, height, width, transformation=True):
+    def __init__(self, image_list, imagePathGT, height, width, hrImageSize, transformation=True):
         self.image_list = image_list
         self.imagePathGT = imagePathGT
         self.transformLR = transforms
         self.imageH = height
         self.imageW = width
+        self.hrImageSize = hrImageSize
         normalize = transforms.Normalize(normMean, normStd)
 
-        self.transformHRGT = transforms.Compose([ transforms.Resize((self.imageH, self.imageW)),
-                                                transforms.Resize((self.imageH,self.imageW), interpolation=Image.BICUBIC),
+        self.transformHRGT = transforms.Compose([  # transforms.Resize((self.imageH, self.imageW)),
+                                                transforms.Resize((self.hrImageSize,self.hrImageSize), interpolation=Image.BICUBIC),
                                                 transforms.ToTensor(),
                                                 normalize,
                                                 ])
