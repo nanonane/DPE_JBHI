@@ -1,7 +1,8 @@
 .DS_Store
 run.sh
+metric_results*.txt
 
 dataset*
 logs/
-temp/
+temp*/
 checkpoint/
